@@ -1,0 +1,56 @@
+from flask import Flask
+import subprocess
+import datetime
+import pytz
+import os
+
+app = Flask(__name__)
+
+@app.route('/htop')
+def htop():
+    try:
+        # Get username
+        username = os.getenv('USER', subprocess.getoutput('whoami'))
+        
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        server_time = datetime.datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S.%f')
+        
+        # Get top output
+        top_output = subprocess.check_output(['top', '-b', '-n', '1']).decode('utf-8')
+        
+        # Format the response with HTML for better readability
+        response = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>System Information</title>
+    <style>
+        body {{
+            font-family: monospace;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }}
+        pre {{
+            white-space: pre-wrap;
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+        }}
+    </style>
+</head>
+<body>
+    <h2>Name: sample_name</h2>
+    <h2>user: {username}</h2>
+    <h2>Server Time (IST): {server_time}</h2>
+    <h2>TOP output:</h2>
+    <pre>{top_output}</pre>
+</body>
+</html>"""
+        
+        return response
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
